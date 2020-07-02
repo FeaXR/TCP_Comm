@@ -21,7 +21,7 @@ namespace TCP_Comm
         /// <exception cref="Exception"> Thrown when can not connect to next peer </exception>
         /// <exception cref="FormatException"> Thrown when IP is in wrong format, or message is empty</exception>
         /// <exception cref="InvalidDataException">Thrown when port number is invalid</exception>
-        public static void SendMessage(string ip = "127.0.0.1", string port = "9001", string message)
+        public static void SendMessage( string message,string ip = "127.0.0.1", string port = "9001")
         {
             senderWorker.DoWork += SenderWorker_DoWork;
 
@@ -93,7 +93,7 @@ namespace TCP_Comm
         /// <exception cref="Exception"> Thrown when can not connect to next peer </exception>
         /// <exception cref="FormatException"> Thrown when IP is in wrong format, or message is empty</exception>
         /// <exception cref="InvalidDataException">Thrown when port number is invalid</exception>
-        public static void SendStatus(string ip = "127.0.0.1", string port = "9001", SerializableMessage message)
+        public static void SendStatus(SerializableMessage message, string ip = "127.0.0.1", string port = "9001")
         {
             BackgroundWorker serializableMessageSender = new BackgroundWorker();
 
