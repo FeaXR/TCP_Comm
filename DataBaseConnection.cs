@@ -36,7 +36,7 @@ namespace DataBase
         /// <param name="timeout"></param>
         /// <exception cref="Exception"> Thrown when connection is already open </exception>
         /// <exception cref="FormatException"> Thrown when IP is in wrong format</exception>
-        public void DataBaseOpen(string IP = "0.0.0.0", int port = 5432, string username = "postgres", string password = "admin", string databasename = "datacollection", bool pooling = false, int minpoolsize = 1, int maxpoolsize = 999, int timeout = 15)
+        public void DataBaseOpen(string IP = "0.0.0.0", int port = 5432, string username = "postgres", string password = "admin", string databasename = "database", bool pooling = false, int minpoolsize = 1, int maxpoolsize = 999, int timeout = 15)
         {
             if (conn?.State == ConnectionState.Open)
             {
