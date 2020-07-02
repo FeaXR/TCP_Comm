@@ -15,13 +15,13 @@ namespace TCP_Comm
         /// <summary>
         /// Send TCP message to given IP, Port
         /// </summary>
-        /// <param name="iP"></param>
+        /// <param name="ip"></param>
         /// <param name="port"></param>
         /// <param name="message"></param>
         /// <exception cref="Exception"> Thrown when can not connect to next peer </exception>
         /// <exception cref="FormatException"> Thrown when IP is in wrong format, or message is empty</exception>
         /// <exception cref="InvalidDataException">Thrown when port number is invalid</exception>
-        public static void SendMessage(string iP, string port, string message)
+        public static void SendMessage(string ip = "127.0.0.1", string port = "9001", string message)
         {
             senderWorker.DoWork += SenderWorker_DoWork;
 
@@ -34,7 +34,7 @@ namespace TCP_Comm
             {
                 Regex pattern = new Regex(@"\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b");
 
-                if (!pattern.IsMatch(iP))
+                if (!pattern.IsMatch(ip))
                 {
                     throw new FormatException("Invalid format for IP");
                 }
@@ -44,7 +44,7 @@ namespace TCP_Comm
                     throw new InvalidDataException("Invalid Port Number!");
                 }
 
-                senderWorker.RunWorkerAsync(argument: new MessageClass { MessageText = message + "|" + DateTime.Now.ToString(), Ip = iP, Port = portInt });
+                senderWorker.RunWorkerAsync(argument: new MessageClass { MessageText = message + "|" + DateTime.Now.ToString(), Ip = ip, Port = portInt });
             }
             catch (SocketException)
             {
@@ -87,10 +87,13 @@ namespace TCP_Comm
         /// <summary>
         /// Send TCP Station Status message to given IP, Port
         /// </summary>
-        /// <param name="iP"></param>
+        /// <param name="ip"></param>
         /// <param name="port"></param>
         /// <param name="message"></param>
-        public static void SendStatus(string iP, string port, SerializableMessage message)
+        /// <exception cref="Exception"> Thrown when can not connect to next peer </exception>
+        /// <exception cref="FormatException"> Thrown when IP is in wrong format, or message is empty</exception>
+        /// <exception cref="InvalidDataException">Thrown when port number is invalid</exception>
+        public static void SendStatus(string ip = "127.0.0.1", string port = "9001", SerializableMessage message)
         {
             BackgroundWorker serializableMessageSender = new BackgroundWorker();
 
@@ -98,14 +101,14 @@ namespace TCP_Comm
 
             if (message == null)
             {
-                throw new ArgumentNullException();
+                throw new FormatException("Message can't be empty!");
             }
 
             try
             {
                 Regex pattern = new Regex(@"\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b");
 
-                if (!pattern.IsMatch(iP))
+                if (!pattern.IsMatch(ip))
                 {
                     throw new FormatException("Invalid format for IP");
                 }
@@ -119,7 +122,7 @@ namespace TCP_Comm
                 {
                     status = message,
                     Port = port,
-                    Ip = iP
+                    Ip = ip
                 });
             }
             catch (SocketException)
@@ -161,7 +164,7 @@ namespace TCP_Comm
             internal SerializableMessage status;
         }
 
-        //TODO: Implement required fields and adjust constructor accordingly
+        //TODO: Implement required fields and adjust constructor and ToString methods accordingly
 
         /// <summary>
         /// Send several values at once
