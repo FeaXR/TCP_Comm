@@ -66,7 +66,7 @@ namespace TCP_Comm
 
         #endregion StringCommunication
 
-        #region StationStatusCommunication
+        #region SerializableCommunication
 
         private readonly BackgroundWorker stationListenerBackGroundWorker = new BackgroundWorker();
 
@@ -118,5 +118,5 @@ namespace TCP_Comm
         }
     }
 
-    #endregion StationStatusCommunication
+    #endregion SterializableCommunication
 }
