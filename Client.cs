@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.IO;
 using System.Net.Sockets;
@@ -12,6 +12,8 @@ namespace TCP_Comm
     {
         private static readonly BackgroundWorker senderWorker = new BackgroundWorker();
 
+        #region String Communicaction
+
         /// <summary>
         /// Send TCP message to given IP, Port
         /// </summary>
@@ -21,7 +23,7 @@ namespace TCP_Comm
         /// <exception cref="Exception"> Thrown when can not connect to next peer </exception>
         /// <exception cref="FormatException"> Thrown when IP is in wrong format, or message is empty</exception>
         /// <exception cref="InvalidDataException">Thrown when port number is invalid</exception>
-        public static void SendMessage( string message,string ip = "127.0.0.1", string port = "9001")
+        public static void SendMessage(string message, string ip = "127.0.0.1", string port = "9001")
         {
             senderWorker.DoWork += SenderWorker_DoWork;
 
@@ -84,6 +86,10 @@ namespace TCP_Comm
             }
         }
 
+        #endregion String Communicaction
+
+        #region Serializable Communication
+
         /// <summary>
         /// Send TCP Station Status message to given IP, Port
         /// </summary>
@@ -93,7 +99,7 @@ namespace TCP_Comm
         /// <exception cref="Exception"> Thrown when can not connect to next peer </exception>
         /// <exception cref="FormatException"> Thrown when IP is in wrong format, or message is empty</exception>
         /// <exception cref="InvalidDataException">Thrown when port number is invalid</exception>
-        public static void SendStatus(SerializableMessage message, string ip = "127.0.0.1", string port = "9001")
+        public static void SendSerializable(SerializableMessageText message, string ip = "127.0.0.1", string port = "9001")
         {
             BackgroundWorker serializableMessageSender = new BackgroundWorker();
 
@@ -118,9 +124,9 @@ namespace TCP_Comm
                     throw new InvalidDataException("Invalid Port Number!");
                 }
 
-                serializableMessageSender.RunWorkerAsync(argument: new StatusMessage
+                serializableMessageSender.RunWorkerAsync(argument: new SerializableMessage
                 {
-                    status = message,
+                    Text = message,
                     Port = port,
                     Ip = ip
                 });
@@ -133,10 +139,10 @@ namespace TCP_Comm
 
         private static void SerializableMessageSender_DoWork(object sender, DoWorkEventArgs e)
         {
-            var msg = (StatusMessage)e.Argument;
+            var msg = (SerializableMessage)e.Argument;
             string ip = msg.Ip;
             string port = msg.Port;
-            SerializableMessage status = msg.status;
+            SerializableMessageText status = msg.Text;
 
             IFormatter formatter = new BinaryFormatter();
             var client = new TcpClient(ip, int.Parse(port));
@@ -147,43 +153,20 @@ namespace TCP_Comm
             System.Threading.Thread.Sleep(500);
         }
 
+        #endregion Serializable Communication
+
+        #region Classes
+
         /// <summary>
         /// Used for TCP_Client Message sending
         /// </summary>
         private class MessageClass
         {
             internal string Ip { get; set; }
-            internal int Port { get; set; }
             internal string MessageText { get; set; }
+            internal int Port { get; set; }
         }
 
-        private class StatusMessage
-        {
-            internal string Ip;
-            internal string Port;
-            internal SerializableMessage status;
-        }
-
-        //TODO: Implement required fields and adjust constructor and ToString methods accordingly
-
-        /// <summary>
-        /// Send several values at once
-        /// Insert required fields into message
-        /// </summary>
-        [Serializable]
-        public class SerializableMessage
-        {
-            private readonly string MessageText;
-
-            public SerializableMessage(string message = "")
-            {
-                MessageText = message;
-            }
-
-            public override string ToString()
-            {
-                return MessageText;
-            }
-        }
+        #endregion Classes
     }
 }

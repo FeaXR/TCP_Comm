@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -11,10 +11,15 @@ namespace TCP_Comm
 {
     public class Server
     {
-        #region StringCommunication
+        #region String Communication
 
-        private TcpListener listener;
+        /// <summary>
+        /// FIFO storage for the messages. Dequeue to get the message when MessageArrived is triggered
+        /// </summary>
+        public Queue<string> messages = new Queue<string>();
+
         private readonly BackgroundWorker tcpListenerBackgroundWorker = new BackgroundWorker();
+        private TcpListener listener;
 
         /// <summary>
         /// Triggers when a message is ready in public Queue messages
@@ -22,18 +27,13 @@ namespace TCP_Comm
         public event EventHandler MessageArrived;
 
         /// <summary>
-        /// FIFO storage for the messages. Dequeue to get the message when MessageArrived is triggered
-        /// </summary>
-        public Queue<string> messages = new Queue<string>();
-
-        /// <summary>
         /// Start listening for string TCP messages on any IP  address, on given port (default = 9001)
         /// </summary>
-        public void StartStringServer(ushort port = 9001)
+        public void StartStringServer(ushort port = 9001, bool keepOn = true)
         {
             listener = new TcpListener(IPAddress.Any, port);
             tcpListenerBackgroundWorker.DoWork += TcpListenerBackgroundWorker_DoWork;
-            tcpListenerBackgroundWorker.RunWorkerAsync();
+            tcpListenerBackgroundWorker.RunWorkerAsync(argument: keepOn);
         }
 
         /// <summary>
@@ -46,7 +46,9 @@ namespace TCP_Comm
         {
             listener.Start();
 
-            while (true)
+            bool keepOn = (bool)e.Argument;
+
+            do
             {
                 TcpClient tcpClient = listener.AcceptTcpClient();
 
@@ -62,32 +64,33 @@ namespace TCP_Comm
                 }
                 tcpClient.Close();
             }
+            while (keepOn);
         }
 
-        #endregion StringCommunication
+        #endregion String Communication
 
-        #region SerializableCommunication
+        #region Serializable Communication
 
         private readonly BackgroundWorker stationListenerBackGroundWorker = new BackgroundWorker();
 
-        private Queue<Client.SerializableMessage> serializablesMessages = new Queue<Client.SerializableMessage>();
-
-        public Queue<Client.SerializableMessage> SerializableMessages { get => serializablesMessages; set => serializablesMessages = value; }
+        private Queue<SerializableMessageText> serializablesMessages = new Queue<SerializableMessageText>();
 
         /// <summary>
         /// Triggers when a StationStatus is ready in public Queue messages
         /// </summary>
         public event EventHandler SerializableMessageArrived;
 
+        public Queue<SerializableMessageText> SerializableMessages { get => serializablesMessages; set => serializablesMessages = value; }
+
         /// <summary>
         /// Start listening for StationStatus TCP messages on any IP  address, on given port (default = 9001)
         /// </summary>
         /// <param name="port"></param>
-        public void StartSerializableMessageServer(ushort port = 9001)
+        public void StartSerializableMessageServer(ushort port = 9001, bool keepOn = true)
         {
             listener = new TcpListener(IPAddress.Any, port);
             stationListenerBackGroundWorker.DoWork += SerializableMessageListenerBackGroundWorker_DoWork;
-            stationListenerBackGroundWorker.RunWorkerAsync();
+            stationListenerBackGroundWorker.RunWorkerAsync(argument: keepOn);
         }
 
         /// <summary>
@@ -100,14 +103,16 @@ namespace TCP_Comm
         {
             listener.Start();
 
-            while (true)
+            bool keepOn = (bool)e.Argument;
+
+            do
             {
                 TcpClient tcpClient = listener.AcceptTcpClient();
 
                 using (NetworkStream stream = tcpClient.GetStream())
                 {
                     IFormatter formatter = new BinaryFormatter();
-                    TCP_Comm.Client.SerializableMessage status = (TCP_Comm.Client.SerializableMessage)formatter.Deserialize(stream);
+                    SerializableMessageText status = (SerializableMessageText)formatter.Deserialize(stream);
                     stream.Dispose();
                     System.Threading.Thread.Sleep(500);
                     SerializableMessages.Enqueue(status);
@@ -115,8 +120,9 @@ namespace TCP_Comm
                 }
                 tcpClient.Close();
             }
+            while (keepOn);
         }
     }
 
-    #endregion SterializableCommunication
+    #endregion Serializable Communication
 }
