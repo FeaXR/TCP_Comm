@@ -14,25 +14,32 @@ namespace TCP_Comm
         #region String Communication
 
         /// <summary>
-        /// FIFO storage for the messages. Dequeue to get the message when MessageArrived is triggered
+        /// Backgroungworker that sends the string messages asyncronously
         /// </summary>
-        public Queue<string> messages = new Queue<string>();
-
         private readonly BackgroundWorker tcpListenerBackgroundWorker = new BackgroundWorker();
-        private TcpListener listener;
 
         /// <summary>
         /// Triggers when a message is ready in public Queue messages
         /// </summary>
-        public event EventHandler MessageArrived;
+        public event EventHandler StringMessageArrived;
+
+        /// <summary>
+        ///The listener that will get the string communication requests
+        /// </summary>
+        private TcpListener stringListener;
+
+        /// <summary>
+        /// FIFO storage for the messages. Dequeue to get the message when MessageArrived is triggered
+        /// </summary>
+        public Queue<string> stringMessages = new Queue<string>();
 
         /// <summary>
         /// Start listening for string TCP messages on any IP  address, on given port (default = 9001)
         /// </summary>
         public void StartStringServer(ushort port = 9001, bool keepOn = true)
         {
-            listener = new TcpListener(IPAddress.Any, port);
-            tcpListenerBackgroundWorker.DoWork += TcpListenerBackgroundWorker_DoWork;
+            stringListener = new TcpListener(IPAddress.Any, port);
+            tcpListenerBackgroundWorker.DoWork += StringListenerBackgroundWorker_DoWork;
             tcpListenerBackgroundWorker.RunWorkerAsync(argument: keepOn);
         }
 
@@ -42,24 +49,23 @@ namespace TCP_Comm
         /// <param name="sender"></param>
         /// <param name="e"></param>
         /// <exception cref="Exception"></exception>
-        private void TcpListenerBackgroundWorker_DoWork(object sender, DoWorkEventArgs e)
+        private void StringListenerBackgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            listener.Start();
-
+            stringListener.Start();
             bool keepOn = (bool)e.Argument;
 
             do
             {
-                TcpClient tcpClient = listener.AcceptTcpClient();
+                TcpClient tcpClient = stringListener.AcceptTcpClient();
 
                 using (NetworkStream stream = tcpClient.GetStream())
                 {
                     StreamReader reader = new StreamReader(stream);
                     string message = reader.ReadToEnd();
 
-                    messages.Enqueue(message);
+                    stringMessages.Enqueue(message);
 
-                    MessageArrived?.Invoke(this, EventArgs.Empty);
+                    StringMessageArrived?.Invoke(this, EventArgs.Empty);
                     reader.Dispose();
                 }
                 tcpClient.Close();
@@ -71,16 +77,25 @@ namespace TCP_Comm
 
         #region Serializable Communication
 
+        /// <summary>
+        /// Backgroungworker that sends the string messages asyncronously
+        /// </summary>
         private readonly BackgroundWorker stationListenerBackGroundWorker = new BackgroundWorker();
-
-        private Queue<SerializableMessageText> serializablesMessages = new Queue<SerializableMessageText>();
 
         /// <summary>
         /// Triggers when a StationStatus is ready in public Queue messages
         /// </summary>
         public event EventHandler SerializableMessageArrived;
 
-        public Queue<SerializableMessageText> SerializableMessages { get => serializablesMessages; set => serializablesMessages = value; }
+        /// <summary>
+        ///The listener that will get the serializable communication requests
+        /// </summary>
+        private TcpListener serializableListener;
+
+        /// <summary>
+        /// FIFO storage for the serializable messages. Dequeue to get the message when SerializableMessageArrived is triggered
+        /// </summary>
+        public Queue<SerializableMessageText> SerializableMessages { get; set; } = new Queue<SerializableMessageText>();
 
         /// <summary>
         /// Start listening for StationStatus TCP messages on any IP  address, on given port (default = 9001)
@@ -88,7 +103,7 @@ namespace TCP_Comm
         /// <param name="port"></param>
         public void StartSerializableMessageServer(ushort port = 9001, bool keepOn = true)
         {
-            listener = new TcpListener(IPAddress.Any, port);
+            serializableListener = new TcpListener(IPAddress.Any, port);
             stationListenerBackGroundWorker.DoWork += SerializableMessageListenerBackGroundWorker_DoWork;
             stationListenerBackGroundWorker.RunWorkerAsync(argument: keepOn);
         }
@@ -101,13 +116,13 @@ namespace TCP_Comm
         /// <exception cref="Exception"></exception>
         private void SerializableMessageListenerBackGroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            listener.Start();
+            serializableListener.Start();
 
             bool keepOn = (bool)e.Argument;
 
             do
             {
-                TcpClient tcpClient = listener.AcceptTcpClient();
+                TcpClient tcpClient = serializableListener.AcceptTcpClient();
 
                 using (NetworkStream stream = tcpClient.GetStream())
                 {

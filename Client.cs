@@ -10,9 +10,9 @@ namespace TCP_Comm
 {
     public static class Client
     {
-        private static readonly BackgroundWorker senderWorker = new BackgroundWorker();
-
         #region String Communicaction
+
+        private static readonly BackgroundWorker stringSenderWorker = new BackgroundWorker();
 
         /// <summary>
         /// Send TCP message to given IP, Port
@@ -23,10 +23,8 @@ namespace TCP_Comm
         /// <exception cref="Exception"> Thrown when can not connect to next peer </exception>
         /// <exception cref="FormatException"> Thrown when IP is in wrong format, or message is empty</exception>
         /// <exception cref="InvalidDataException">Thrown when port number is invalid</exception>
-        public static void SendMessage(string message, string ip = "127.0.0.1", string port = "9001")
+        public static void SendStringMessage(string message, string ip = "127.0.0.1", string port = "9001")
         {
-            senderWorker.DoWork += SenderWorker_DoWork;
-
             if (message?.Length == 0)
             {
                 throw new FormatException("Message can't be empty!");
@@ -45,8 +43,8 @@ namespace TCP_Comm
                 {
                     throw new InvalidDataException("Invalid Port Number!");
                 }
-
-                senderWorker.RunWorkerAsync(argument: new MessageClass { MessageText = message + "|" + DateTime.Now.ToString(), Ip = ip, Port = portInt });
+                stringSenderWorker.DoWork += StringSenderWorker_DoWork;
+                stringSenderWorker.RunWorkerAsync(argument: new MessageClass { MessageText = message + "|" + DateTime.Now.ToString(), Ip = ip, Port = portInt });
             }
             catch (SocketException)
             {
@@ -60,9 +58,9 @@ namespace TCP_Comm
         /// <param name="sender"></param>
         /// <param name="e"></param>
         /// <exception cref="Exception">Thrown when can not connect to next peer</exception>
-        private static void SenderWorker_DoWork(object sender, DoWorkEventArgs e)
+        private static void StringSenderWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            senderWorker.DoWork -= SenderWorker_DoWork;
+            stringSenderWorker.DoWork -= StringSenderWorker_DoWork;
             var mc = (MessageClass)e.Argument;
 
             try
@@ -90,6 +88,8 @@ namespace TCP_Comm
 
         #region Serializable Communication
 
+        private static readonly BackgroundWorker serializableMessageSender = new BackgroundWorker();
+
         /// <summary>
         /// Send TCP Station Status message to given IP, Port
         /// </summary>
@@ -101,10 +101,6 @@ namespace TCP_Comm
         /// <exception cref="InvalidDataException">Thrown when port number is invalid</exception>
         public static void SendSerializable(SerializableMessageText message, string ip = "127.0.0.1", string port = "9001")
         {
-            BackgroundWorker serializableMessageSender = new BackgroundWorker();
-
-            serializableMessageSender.DoWork += SerializableMessageSender_DoWork;
-
             if (message == null)
             {
                 throw new FormatException("Message can't be empty!");
@@ -123,7 +119,7 @@ namespace TCP_Comm
                 {
                     throw new InvalidDataException("Invalid Port Number!");
                 }
-
+                serializableMessageSender.DoWork += SerializableMessageSender_DoWork;
                 serializableMessageSender.RunWorkerAsync(argument: new SerializableMessage
                 {
                     Text = message,
@@ -139,6 +135,8 @@ namespace TCP_Comm
 
         private static void SerializableMessageSender_DoWork(object sender, DoWorkEventArgs e)
         {
+            serializableMessageSender.DoWork -= SerializableMessageSender_DoWork;
+
             var msg = (SerializableMessage)e.Argument;
             string ip = msg.Ip;
             string port = msg.Port;

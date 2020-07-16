@@ -7,7 +7,7 @@ The messages can be acquired by the dequeue method.
 
 The default port for sending and receiving TCP messages is 9001.
 
-# Version 0.2
+# Version 0.3
 Cleanup and reformatting for better readability and understanding.
 
 # What's New
