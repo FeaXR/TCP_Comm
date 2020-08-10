@@ -12,10 +12,10 @@ The default port for sending and receiving TCP messages is 9001.
  * Release date: **2020. 08. 10.**
 
 # What's New
-Can run multiple instances on different ports parallel
-Uses less memory than before
-Cleanup and reformatting for better readability and understanding.
-Added more comments for better understanding.
+Can run multiple instances on different ports parallel. <br>
+Uses less memory than before. <br>
+Cleanup and reformatting for better readability and understanding. <br>
+Added more comments for better understanding. <br>
 
 # Features
 - Send and receive TCP messages with less code. 2 lines to set up server, 2 lines to send message.
