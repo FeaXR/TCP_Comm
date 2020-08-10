@@ -7,15 +7,18 @@ The messages can be acquired by the dequeue method.
 
 The default port for sending and receiving TCP messages is 9001.
 
-# Version 0.3
-Cleanup and reformatting for better readability and understanding.
+# Newest version
+ * Version number: **0.4**
+ * Release date: **2020. 08. 10.**
 
 # What's New
-Introduced new file, Classes.cs to store the classes needed for the server and client instead of storing it in the Client.cs file.
-Server now can be started to receie one message or keep on receiving every message
+Can run multiple instances on different ports parallel
+Uses less memory than before
+Cleanup and reformatting for better readability and understanding.
+Added more comments for better understanding.
 
 # Features
-- Send and receive TCP messages with less code. 2 lines to set up server, 1 line to send message.
+- Send and receive TCP messages with less code. 2 lines to set up server, 2 lines to send message.
 - Always listening server with easily read output
-- Send and receive any serializable data
+- Send and receive any data with fully customizable message class
 - Fully customize every aspect of the receiving and sending process

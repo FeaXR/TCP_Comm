@@ -11,7 +11,18 @@ namespace TCP_Comm
 {
     public class Server
     {
+        public Server()
+        {
+            serializableListenerBackGroundWorker.DoWork += SerializableMessageListenerBackGroundWorker_DoWork;
+            tcpListenerBackgroundWorker.DoWork += StringListenerBackgroundWorker_DoWork;
+        }
+
         #region String Communication
+
+        /// <summary>
+        /// FIFO storage for the messages. Dequeue to get the message when MessageArrived is triggered
+        /// </summary>
+        public Queue<string> stringMessages = new Queue<string>();
 
         /// <summary>
         /// Backgroungworker that sends the string messages asyncronously
@@ -24,23 +35,13 @@ namespace TCP_Comm
         public event EventHandler StringMessageArrived;
 
         /// <summary>
-        ///The listener that will get the string communication requests
-        /// </summary>
-        private TcpListener stringListener;
-
-        /// <summary>
-        /// FIFO storage for the messages. Dequeue to get the message when MessageArrived is triggered
-        /// </summary>
-        public Queue<string> stringMessages = new Queue<string>();
-
-        /// <summary>
         /// Start listening for string TCP messages on any IP  address, on given port (default = 9001)
         /// </summary>
+        /// <param name="port"></param>
+        /// <param name="keepOn">If true, the server will loop forever and receive all messages sent to it's port</param>
         public void StartStringServer(ushort port = 9001, bool keepOn = true)
         {
-            stringListener = new TcpListener(IPAddress.Any, port);
-            tcpListenerBackgroundWorker.DoWork += StringListenerBackgroundWorker_DoWork;
-            tcpListenerBackgroundWorker.RunWorkerAsync(argument: keepOn);
+            tcpListenerBackgroundWorker.RunWorkerAsync(argument: new ServerBackgroundworkerArguments(keepOn, IPAddress.Any, port));
         }
 
         /// <summary>
@@ -51,8 +52,12 @@ namespace TCP_Comm
         /// <exception cref="Exception"></exception>
         private void StringListenerBackgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
+            TcpListener stringListener = new TcpListener(((ServerBackgroundworkerArguments)e.Argument).IP, ((ServerBackgroundworkerArguments)e.Argument).port);
+
             stringListener.Start();
-            bool keepOn = (bool)e.Argument;
+
+            //if true, receciver will loop forever
+            bool keepOn = ((ServerBackgroundworkerArguments)e.Argument).keepOn;
 
             do
             {
@@ -61,9 +66,8 @@ namespace TCP_Comm
                 using (NetworkStream stream = tcpClient.GetStream())
                 {
                     StreamReader reader = new StreamReader(stream);
-                    string message = reader.ReadToEnd();
 
-                    stringMessages.Enqueue(message);
+                    stringMessages.Enqueue(reader.ReadToEnd());
 
                     StringMessageArrived?.Invoke(this, EventArgs.Empty);
                     reader.Dispose();
@@ -80,7 +84,7 @@ namespace TCP_Comm
         /// <summary>
         /// Backgroungworker that sends the string messages asyncronously
         /// </summary>
-        private readonly BackgroundWorker stationListenerBackGroundWorker = new BackgroundWorker();
+        private readonly BackgroundWorker serializableListenerBackGroundWorker = new BackgroundWorker();
 
         /// <summary>
         /// Triggers when a StationStatus is ready in public Queue messages
@@ -88,24 +92,18 @@ namespace TCP_Comm
         public event EventHandler SerializableMessageArrived;
 
         /// <summary>
-        ///The listener that will get the serializable communication requests
-        /// </summary>
-        private TcpListener serializableListener;
-
-        /// <summary>
         /// FIFO storage for the serializable messages. Dequeue to get the message when SerializableMessageArrived is triggered
         /// </summary>
-        public Queue<SerializableMessageText> SerializableMessages { get; set; } = new Queue<SerializableMessageText>();
+        public Queue<SerializableMessageData> SerializableMessages { get; set; } = new Queue<SerializableMessageData>();
 
         /// <summary>
         /// Start listening for StationStatus TCP messages on any IP  address, on given port (default = 9001)
         /// </summary>
         /// <param name="port"></param>
+        /// <param name="keepOn">If true, the server will loop forever and receive all messages sent to it's port</param>
         public void StartSerializableMessageServer(ushort port = 9001, bool keepOn = true)
         {
-            serializableListener = new TcpListener(IPAddress.Any, port);
-            stationListenerBackGroundWorker.DoWork += SerializableMessageListenerBackGroundWorker_DoWork;
-            stationListenerBackGroundWorker.RunWorkerAsync(argument: keepOn);
+            serializableListenerBackGroundWorker.RunWorkerAsync(argument: new ServerBackgroundworkerArguments(keepOn, IPAddress.Any, port));
         }
 
         /// <summary>
@@ -116,9 +114,12 @@ namespace TCP_Comm
         /// <exception cref="Exception"></exception>
         private void SerializableMessageListenerBackGroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
+            TcpListener serializableListener = new TcpListener(((ServerBackgroundworkerArguments)e.Argument).IP, ((ServerBackgroundworkerArguments)e.Argument).port);
+
             serializableListener.Start();
 
-            bool keepOn = (bool)e.Argument;
+            //if true, receciver will loop forever
+            bool keepOn = ((ServerBackgroundworkerArguments)e.Argument).keepOn;
 
             do
             {
@@ -127,10 +128,8 @@ namespace TCP_Comm
                 using (NetworkStream stream = tcpClient.GetStream())
                 {
                     IFormatter formatter = new BinaryFormatter();
-                    SerializableMessageText status = (SerializableMessageText)formatter.Deserialize(stream);
+                    SerializableMessages.Enqueue((SerializableMessageData)formatter.Deserialize(stream));
                     stream.Dispose();
-                    System.Threading.Thread.Sleep(500);
-                    SerializableMessages.Enqueue(status);
                     SerializableMessageArrived?.Invoke(this, EventArgs.Empty);
                 }
                 tcpClient.Close();

@@ -1,24 +1,34 @@
 ﻿using System;
+using System.Net;
+using System.Reflection;
 
 namespace TCP_Comm
 {
-    public class SerializableMessage
+    /// <summary>
+    /// Used for TCP_Client Message sending
+    /// </summary>
+    public class MessageClass
     {
         internal string Ip { get; set; }
-        internal string Port { get; set; }
-        internal SerializableMessageText Text { get; set; }
+        internal string MessageText { get; set; }
+        internal int Port { get; set; }
     }
 
-    //TODO: Implement required fields and adjust constructor and ToString methods accordingly
+    public class SerializableMessage
+    {
+        internal SerializableMessageData Data { get; set; }
+        internal string Ip { get; set; }
+        internal int Port { get; set; }
+    }
 
     /// <summary>
     /// Send several values at once
-    /// Insert required fields into message
+    /// Customize fields of message if needed
     /// </summary>
     [Serializable]
-    public class SerializableMessageText
+    public class SerializableMessageData //TODO: Implement required fields and adjust constructor and ToString methods accordingly
     {
-        public SerializableMessageText(string message = "")
+        public SerializableMessageData(string message = "")
         {
             MessageText = message;
         }
@@ -28,6 +38,27 @@ namespace TCP_Comm
         public override string ToString()
         {
             return MessageText;
+        }
+    }
+
+    public class ServerBackgroundworkerArguments
+    {
+        public bool keepOn;
+        public IPAddress IP;
+        public int port;
+
+        public ServerBackgroundworkerArguments(bool _keepOn, string _IP, int _port)
+        {
+            keepOn = _keepOn;
+            IP = IPAddress.Parse(_IP);
+            port = _port;
+        }
+
+        public ServerBackgroundworkerArguments(bool _keepOn, IPAddress _IP, int _port)
+        {
+            keepOn = _keepOn;
+            IP = _IP;
+            port = _port;
         }
     }
 }
